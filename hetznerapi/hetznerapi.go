@@ -9,6 +9,8 @@ import (
 	"golang.org/x/crypto/ssh"
 	"github.com/google/uuid"
 	"strings"
+	"time"
+	"strconv"
 )
 
 type account struct {
@@ -171,4 +173,40 @@ func (a account) GetServerById(id int) hcloud.Server {
 	}
 
     return *server
+}
+
+
+func (a account) GetMetricsByServerId(id int, metricName string, fr time.Time, to time.Time) hcloud.ServerMetrics {
+	// log.Fatal("fr: ", fr)
+	// log.Fatal("to: ", to)
+	// // return false
+	server := hcloud.Server{ID: id}
+	opts := hcloud.ServerGetMetricsOpts{
+				Types: []hcloud.ServerMetricType{hcloud.ServerMetricType(metricName)},
+				Start: fr,
+				End:   to,
+			}
+    actual, _, err := a.hetznerAPI.Server.GetMetrics(context.Background(), &server, opts)
+
+	if err != nil {
+		log.Fatal("ERR:",err)
+	}
+
+    return *actual
+}
+
+func (a account) GetAvgNetworkByServerId(id int, fr time.Time, to time.Time) float64 {
+	metricNetwork := a.GetMetricsByServerId(id, "network", fr, to)
+	totalOut := 0.0
+	totalIn := 0.0
+	for k, bw := range metricNetwork.TimeSeries["network.0.bandwidth.out"] {
+		bw64Out,_ := strconv.ParseFloat(bw.Value, 64)
+		bw64In,_ := strconv.ParseFloat(metricNetwork.TimeSeries["network.0.bandwidth.in"][k].Value, 64)
+		totalOut += bw64Out
+		totalIn += bw64In
+		// fmt.Println( k )
+		// fmt.Println()
+	}
+	bwN := float64(len(metricNetwork.TimeSeries["network.0.bandwidth.out"]))
+    return (totalIn/bwN + totalOut/bwN)*8
 }

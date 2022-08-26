@@ -13,22 +13,25 @@ func main() {
 	s := hetzner.ListAllServers()
 	for _, e := range s {
 		fmt.Println(e.ID, e.Name, e.Status, e.PublicNet.IPv4.IP, e.PublicNet.IPv6.IP, e.IncludedTraffic, e.OutgoingTraffic, e.IngoingTraffic )
+		metrics := hetzner.GetAvgNetworkByServerId(e.ID, time.Now().Add(-time.Minute * 1), time.Now())
+		fmt.Println(e.ID, "avg bandwidth in last minute = " ,metrics, "bits/sec\n")
+		// break
 	}
 	// create new server with ssd key
-	sshid := hetzner.SSHKeyIdGetOrCreate(os.Getenv("SSH_PUB_KEY"))
-	serverId := hetzner.CreateServer(sshid, "cx11", "centos-stream-8", "hel1")
-	// fmt.Println(serverId)
+	// sshid := hetzner.SSHKeyIdGetOrCreate(os.Getenv("SSH_PUB_KEY"))
+	// serverId := hetzner.CreateServer(sshid, "cx11", "centos-stream-8", "hel1")
+	// // fmt.Println(serverId)
 	
-	for {
-		serverObj := hetzner.GetServerById(serverId)
-		fmt.Println(serverObj.ID, serverObj.Name, serverObj.Status, serverObj.PublicNet.IPv4.IP, serverObj.PublicNet.IPv6.IP, serverObj.IncludedTraffic, serverObj.OutgoingTraffic, serverObj.IngoingTraffic )
-		time.Sleep(5 * time.Second)
-		if (serverObj.Status == "running") {break}
-	} 
-	// delete server by ID
-	hetzner.DeleteServer(serverId)
-	s2 := hetzner.ListAllServers()
-	for _, e := range s2 {
-		fmt.Println(e.ID, e.Name, e.Status, e.PublicNet.IPv4.IP, e.PublicNet.IPv6.IP, e.IncludedTraffic, e.OutgoingTraffic, e.IngoingTraffic )
-	}
+	// for {
+	// 	serverObj := hetzner.GetServerById(serverId)
+	// 	fmt.Println(serverObj.ID, serverObj.Name, serverObj.Status, serverObj.PublicNet.IPv4.IP, serverObj.PublicNet.IPv6.IP, serverObj.IncludedTraffic, serverObj.OutgoingTraffic, serverObj.IngoingTraffic )
+	// 	time.Sleep(5 * time.Second)
+	// 	if (serverObj.Status == "running") {break}
+	// } 
+	// // delete server by ID
+	// hetzner.DeleteServer(serverId)
+	// s2 := hetzner.ListAllServers()
+	// for _, e := range s2 {
+	// 	fmt.Println(e.ID, e.Name, e.Status, e.PublicNet.IPv4.IP, e.PublicNet.IPv6.IP, e.IncludedTraffic, e.OutgoingTraffic, e.IngoingTraffic )
+	// }
 }
